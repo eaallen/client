@@ -3,10 +3,14 @@ import SendIcon from '@mui/icons-material/Send';
 import React from "react";
 import MessageHistory, { MessageItem } from "./MessageHistory";
 
-export default function Messaging(props: {}) {
+interface Props {
+    history: MessageItem[]
+}
+
+export default function Messaging(props: Props) {
     return (
         <Box>
-            <MessageHistory history={testHistory}></MessageHistory>
+            <MessageHistory history={props.history}></MessageHistory>
             <Stack spacing={2}>
                 <TextField label="Outlined" variant="outlined" />
                 <Button variant="contained" endIcon={<SendIcon />}>
@@ -16,10 +20,3 @@ export default function Messaging(props: {}) {
         </Box>
     )
 }
-
-const testHistory: Array<MessageItem> = [
-    { content: "Hello", role: "user" },
-    { content: "Hi", role: "assistant" },
-    { content: "How are you?", role: "user" },
-    { content: "I am a computer. I do not have feelings.", role: "assistant" }
-]

@@ -1,8 +1,12 @@
 import React from "react"
 import parseCSV from "../../lib/csv";
-import SQLite, { initDB } from "../../lib/sql";
+import DB from "../../lib/sql";
 
-export default function UploadCSV() {
+interface Props {
+    uploadDataToDB: (filename: string, csv: string)=>void
+}
+
+export default function UploadCSV(props: Props) {
     const [data, setData] = React.useState({})
     function onChange(event: React.ChangeEvent<HTMLInputElement>){
         const files = event.target.files ?? [];
@@ -12,11 +16,7 @@ export default function UploadCSV() {
             reader.onload = async (e) => {
                 const contents = e.target?.result as string | null // marking as string sinde we call readAsText
                 if (contents) {
-                    const csvData = parseCSV(contents)
-                    console.log(csvData);
-                    // setData({...data, [file.name]: csvData})
-                    const db = await SQLite.initDB([{filename: file.name, csv: contents}])
-                    console.log(db.exec("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name"))
+                    props.uploadDataToDB(file.name, contents)
                 }
             }
             reader.readAsText(file)
