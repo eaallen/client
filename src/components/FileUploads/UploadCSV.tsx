@@ -22,6 +22,5 @@ export default function UploadCSV(props: Props) {
             reader.readAsText(file)
         }
     }
-    console.log(data)
     return <input type="file" onChange={onChange}/>
 }

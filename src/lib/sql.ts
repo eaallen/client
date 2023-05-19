@@ -1,7 +1,7 @@
 import { Database, QueryExecResult } from "sql.js";
 import parseCSV from "./csv";
 
-export async function loadCSVIntoSQLite(db: Database, fileName: string, csv: string) {
+export function loadCSVIntoSQLite(db: Database, fileName: string, csv: string):string {
     const data = parseCSV(csv)
     const header = data.shift()
     if (!header) { throw new Error("no header") }
@@ -22,20 +22,21 @@ export async function loadCSVIntoSQLite(db: Database, fileName: string, csv: str
 
     // const resp = db.exec(`SELECT * FROM ${fileName}`)
 
-    return db
+    return makeTable
 }
 
 interface DBInputData {
     filename: string
     csv: string
 }
-export async function initDB(inputData: DBInputData[]) {
+export async function initDB(inputData: DBInputData[]): Promise<[Database, string[]]> {
     const SQL = await window.initSqlJs({ locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.wasm` })
     const db = new SQL.Database();
+    const schema: string[] = []
     for (const { filename, csv } of inputData) {
-        loadCSVIntoSQLite(db, filename, csv)
+        schema.push(loadCSVIntoSQLite(db, filename, csv))
     }
-    return db
+    return [db, schema]
 }
 
 export type TableSchemas = {
@@ -44,14 +45,16 @@ export type TableSchemas = {
 
 export default class DB {
     private db: Database
+    schema: string[]
 
-    private constructor(db: Database) {
+    private constructor(db: Database, schema: string[]) {
         this.db = db
+        this.schema = schema
     }
 
     static async init(inputData: DBInputData[]) {
-        const db = await initDB(inputData)
-        return new DB(db)
+        const [db, schema] = await initDB(inputData)
+        return new DB(db,schema)
     }
     run(statement: string) {
         this.db.run(statement)
@@ -63,7 +66,8 @@ export default class DB {
         return this.db
     }
     loadCSV(fileName: string, csv: string) {
-        loadCSVIntoSQLite(this.db, fileName, csv)
+        const creaetSchema = loadCSVIntoSQLite(this.db, fileName, csv)
+        this.schema.push(creaetSchema) 
     }
     /**
      * @returns list of table names in the database
@@ -86,6 +90,9 @@ export default class DB {
         }
         return schemas
     }
+    getCreateSchemas():string{
+        return this.schema.join("\n")
+    }
     /**
      * converts the current tables in the DB into a JSON string which can be 
      * given to roadrunner AI to consume as context to query
@@ -94,5 +101,9 @@ export default class DB {
     convertTableSchemasIntoRoadRunnerAIInput(): string {
         const tableSchemas = this.getTableSchemas()
         return JSON.stringify(tableSchemas)
+    }
+
+    pushSchema(schema: string){
+        this.schema.push(schema)
     }
 }
