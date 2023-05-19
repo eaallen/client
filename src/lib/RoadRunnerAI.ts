@@ -41,15 +41,12 @@ export default class RoadRunnerAI {
     response: CreateChatCompletionResponse | undefined
 
     private request: CreateChatCompletionRequest = { model: "gpt-3.5-turbo", messages: [] }
-    private cachedRequest: CreateChatCompletionRequest = structuredClone(this.request)
-    private apiKey: string
     totalTokens: number = 0
     primer: ChatCompletionRequestMessage[] | null = null
 
 
 
-    constructor(schema: string | undefined = undefined, token: string = "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") {
-        this.apiKey = token
+    constructor(schema: string | undefined = undefined) {
         this.schema = schema
     }
 
@@ -71,7 +68,6 @@ export default class RoadRunnerAI {
             this.request.messages.push(resp.choices[0].message) // append respone so we can continue the conversation
         }
 
-        this.cachedRequest = structuredClone(this.request) // cache so we know what we asked last time
         return resp
     }
 
